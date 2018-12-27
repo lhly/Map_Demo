@@ -30,7 +30,7 @@ public class MainActivity extends CheckPermissions
     private WifiManager mWifiManager;
     private TextView mLocationErrText;
 
-    private AMap mMap;
+    private AMap aMap;
     private SensorEventHelper sensorEventhelper;
     private Marker marker;
 
@@ -63,20 +63,20 @@ public class MainActivity extends CheckPermissions
     }
 
     private void setUpMap() {
-        mMap = ((SupportMapFragment) getSupportFragmentManager()
+        aMap = ((SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map)).getMap();
-        mMap.setMapStatusLimits(latLngBounds);
-        mMap.setLocationSource(this);// 设置定位监听
-        mMap.getUiSettings().setMyLocationButtonEnabled(true);// 设置默认定位按钮是否显示
-        mMap.getUiSettings().setRotateGesturesEnabled(false);
-        mMap.getUiSettings().setMyLocationButtonEnabled(false);
-        mMap.setMyLocationEnabled(true);// 设置为true表示显示定位层并可触发定位，false表示隐藏定位层并不可触发定位，默认是false
+        aMap.setMapStatusLimits(latLngBounds);
+        aMap.setLocationSource(this);// 设置定位监听
+        aMap.getUiSettings().setMyLocationButtonEnabled(true);// 设置默认定位按钮是否显示
+        aMap.getUiSettings().setRotateGesturesEnabled(false);
+        aMap.getUiSettings().setMyLocationButtonEnabled(false);
+        aMap.setMyLocationEnabled(true);// 设置为true表示显示定位层并可触发定位，false表示隐藏定位层并不可触发定位，默认是false
         // 设置定位的类型为定位模式 ，可以由定位、跟随或地图根据面向方向旋转几种
-        mMap.setMyLocationType(AMap.LOCATION_TYPE_LOCATE);
+        aMap.setMyLocationType(AMap.LOCATION_TYPE_LOCATE);
     }
 
     private void setUpMapIfNeeded() {
-        if (mMap == null) {
+        if (aMap == null) {
             setUpMap();
         }
     }
@@ -171,7 +171,7 @@ public class MainActivity extends CheckPermissions
                 R.mipmap.locked)));
         options.anchor(0.5f, 0.5f);
         options.position(latLng);
-        marker = mMap.addMarker(options);
+        marker = aMap.addMarker(options);
     }
 
     /**
@@ -191,6 +191,7 @@ public class MainActivity extends CheckPermissions
             //设置定位参数
             mlocationClient.setLocationOption(mLocationOption);
             // 此方法为每隔固定时间会发起一次定位请求，为了减少电量消耗或网络流量消耗，
+            mLocationOption.setInterval(2000);
             // 注意设置合适的定位时间的间隔（最小间隔支持为2000ms），并且在合适时间调用stopLocation()方法来取消定位请求
             // 在定位结束后，在合适的生命周期调用onDestroy()方法
             // 在单次定位情况下，定位无论成功与否，都无需调用stopLocation()方法移除请求，定位sdk内部会移除
