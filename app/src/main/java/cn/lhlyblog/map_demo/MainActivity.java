@@ -11,6 +11,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.amap.api.location.AMapLocation;
 import com.amap.api.location.AMapLocationClient;
@@ -24,7 +25,9 @@ import com.amap.api.maps.model.LatLng;
 import com.amap.api.maps.model.LatLngBounds;
 import com.amap.api.maps.model.Marker;
 import com.amap.api.maps.model.MarkerOptions;
+import com.amap.api.maps.model.MyLocationStyle;
 
+import cn.lhlyblog.map_demo.util.Constants;
 import cn.lhlyblog.map_demo.view.PointsActivity;
 
 public class MainActivity extends CheckPermissions
@@ -162,6 +165,9 @@ public class MainActivity extends CheckPermissions
                     && amapLocation.getErrorCode() == 0) {
                 LatLng location = new LatLng(amapLocation.getLatitude(), amapLocation.getLongitude());
                 mLocationErrText.setVisibility(View.GONE);
+                Constants constants = new Constants();
+                constants.setMYLATLNG(location);
+                // Log.e("LatLngTip", "onLocationChanged: " + constants.MYLATLNG.latitude);;
                 /*mListener.onLocationChanged(amapLocation);// 显示系统小蓝点*/
                 addMarker(location);
                 sensorEventhelper.setCurrentMarker(marker);
@@ -200,16 +206,16 @@ public class MainActivity extends CheckPermissions
             mlocationClient.setLocationListener(this);
             //设置为高精度定位模式
             mLocationOption.setLocationMode(AMapLocationClientOption.AMapLocationMode.Hight_Accuracy);
+            mLocationOption.setInterval(2000);
+            mLocationOption.setSensorEnable(true);
             //设置定位参数
             mlocationClient.setLocationOption(mLocationOption);
             // 此方法为每隔固定时间会发起一次定位请求，为了减少电量消耗或网络流量消耗，
-            mLocationOption.setInterval(2000);
             // 注意设置合适的定位时间的间隔（最小间隔支持为2000ms），并且在合适时间调用stopLocation()方法来取消定位请求
             // 在定位结束后，在合适的生命周期调用onDestroy()方法
             // 在单次定位情况下，定位无论成功与否，都无需调用stopLocation()方法移除请求，定位sdk内部会移除
             mlocationClient.startLocation();
 
-            mLocationOption.setSensorEnable(false);
         }
     }
 
