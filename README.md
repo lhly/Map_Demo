@@ -4,4 +4,4 @@
 
 - 或扫描二维码下载：
 
-![扫我下载](https://ws3.sinaimg.cn/large/005BYqpgly1fylf1wdkgbj30780780si.jpg)
+![扫我下载](https://github.com/lhly/Map_Demo/blob/master/download/download.png)
