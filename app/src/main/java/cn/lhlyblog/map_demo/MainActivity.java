@@ -25,7 +25,6 @@ import com.amap.api.maps.model.LatLng;
 import com.amap.api.maps.model.LatLngBounds;
 import com.amap.api.maps.model.Marker;
 import com.amap.api.maps.model.MarkerOptions;
-import com.amap.api.maps.model.MyLocationStyle;
 
 import cn.lhlyblog.map_demo.util.Constants;
 import cn.lhlyblog.map_demo.view.PointsActivity;
