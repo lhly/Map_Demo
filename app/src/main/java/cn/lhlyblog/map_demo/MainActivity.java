@@ -9,6 +9,7 @@ import android.os.Bundle;
 import android.support.v7.app.AlertDialog;
 import android.util.Log;
 import android.view.View;
+import android.widget.Button;
 import android.widget.TextView;
 
 import com.amap.api.location.AMapLocation;
@@ -24,11 +25,14 @@ import com.amap.api.maps.model.LatLngBounds;
 import com.amap.api.maps.model.Marker;
 import com.amap.api.maps.model.MarkerOptions;
 
+import cn.lhlyblog.map_demo.view.PointsActivity;
+
 public class MainActivity extends CheckPermissions
         implements LocationSource, AMapLocationListener {
 
     private WifiManager mWifiManager;
     private TextView mLocationErrText;
+    private Button button;
 
     private AMap aMap;
     private SensorEventHelper sensorEventhelper;
@@ -50,8 +54,16 @@ public class MainActivity extends CheckPermissions
         mLocationErrText = (TextView) findViewById(R.id.location_errInfo_text);
         mWifiManager = (WifiManager) this.getApplicationContext()
                 .getSystemService(Context.WIFI_SERVICE);
+        button = (Button) findViewById(R.id.btn_list);
 
         init();
+        button.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent(MainActivity.this, PointsActivity.class);
+                startActivity(intent);
+            }
+        });
     }
 
     private void init() {

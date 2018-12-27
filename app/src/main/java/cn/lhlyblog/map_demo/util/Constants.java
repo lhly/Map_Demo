@@ -2,11 +2,21 @@ package cn.lhlyblog.map_demo.util;
 
 import com.amap.api.maps.model.LatLng;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class Constants {
 
-	public static String DEFAULT_CITY = "洛阳";
-	public static final String EXTRA_TIP = "ExtraTip";
-	public static final String KEY_WORDS_NAME = "KeyWord";
+    public static final List<String> POINTS = new ArrayList<>();
+    public static final List<LatLng> LOC_POINTS = new ArrayList<>();
 
-	public static final LatLng BEIJING = new LatLng(39.90403, 116.407525);// 北京市经纬度
+    public Constants() {
+        POINTS.add("西门");
+        POINTS.add("桃园宿舍");
+        POINTS.add("桃园操场");
+
+        LOC_POINTS.add(new LatLng(34.629523, 112.59804));
+        LOC_POINTS.add(new LatLng(34.628357, 112.599295));
+        LOC_POINTS.add(new LatLng(34.626503, 112.598512));
+    }
 }
