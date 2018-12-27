@@ -1,7 +1,10 @@
 package cn.lhlyblog.map_demo.view;
 
+import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ListView;
 
 import java.util.ArrayList;
@@ -27,6 +30,18 @@ public class PointsActivity extends AppCompatActivity {
 
         initList();
         listView.setAdapter(adapter);
+        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+                switch (i) {
+                    case 0:
+                        constants.setAIDLATLNG(constants.LOC_POINTS.get(i));
+                        Intent intent = new Intent(PointsActivity.this, WalkRouteActivity.class);
+                        startActivity(intent);
+                        finish();
+                }
+            }
+        });
     }
 
     private void initList() {

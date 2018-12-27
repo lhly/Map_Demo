@@ -60,6 +60,7 @@
             </intent-filter>
         </activity>
         <activity android:name=".view.PointsActivity" />
+        <activity android:name=".view.WalkRouteActivity"></activity>
     </application>
 
 </manifest>

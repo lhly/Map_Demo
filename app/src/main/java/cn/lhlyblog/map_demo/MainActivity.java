@@ -11,7 +11,6 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.amap.api.location.AMapLocation;
 import com.amap.api.location.AMapLocationClient;
@@ -27,6 +26,7 @@ import com.amap.api.maps.model.Marker;
 import com.amap.api.maps.model.MarkerOptions;
 
 import cn.lhlyblog.map_demo.util.Constants;
+import cn.lhlyblog.map_demo.util.SensorEventHelper;
 import cn.lhlyblog.map_demo.view.PointsActivity;
 
 public class MainActivity extends CheckPermissions
@@ -166,7 +166,7 @@ public class MainActivity extends CheckPermissions
                 mLocationErrText.setVisibility(View.GONE);
                 Constants constants = new Constants();
                 constants.setMYLATLNG(location);
-                // Log.e("LatLngTip", "onLocationChanged: " + constants.MYLATLNG.latitude);;
+                // Log.e("showMyLoc", "onLocationChanged: " + constants.getMYLATLNG());;
                 /*mListener.onLocationChanged(amapLocation);// 显示系统小蓝点*/
                 addMarker(location);
                 sensorEventhelper.setCurrentMarker(marker);

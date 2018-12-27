@@ -1,4 +1,4 @@
-package cn.lhlyblog.map_demo;
+package cn.lhlyblog.map_demo.util;
 
 import android.content.Context;
 import android.hardware.Sensor;

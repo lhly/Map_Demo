@@ -7,4 +7,7 @@
     <color name="grey"> #ebebeb</color>
     <color name="white">#FFF</color>
     <color name="text_hint">#6C6C6C</color>
+    <color name="act_background">#efefef</color>
+    <color name="blue">#4c90f9</color>
+    <color name="transparent">#00000000</color>
 </resources>
