@@ -60,7 +60,6 @@
             </intent-filter>
         </activity>
         <activity android:name=".view.PointsActivity" />
-        <activity android:name=".TestActivity"></activity>
     </application>
 
 </manifest>
