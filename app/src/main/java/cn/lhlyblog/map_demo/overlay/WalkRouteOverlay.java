@@ -56,7 +56,8 @@ public class WalkRouteOverlay extends RouteOverlay {
                 WalkStep walkStep = walkPaths.get(i);
                 LatLng latLng = AMapServicesUtil.convertToLatLng(walkStep
                         .getPolyline().get(0));
-                
+				//首个路行点为起点
+				if(i==0){startPoint = latLng;}
 				addWalkStationMarkers(walkStep, latLng);
                 addWalkPolyLines(walkStep);
                

@@ -4,7 +4,10 @@
     android:id="@+id/activity_main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:focusable="true"
+    android:focusableInTouchMode="true"
     tools:context=".MainActivity">
+
 
     <fragment
         android:id="@+id/map"
@@ -32,5 +35,17 @@
         android:text="List"
         android:layout_alignParentStart="true"
         android:layout_alignParentBottom="true"/>
+
+    <AutoCompleteTextView
+        android:id="@+id/auto_edit"
+        android:layout_width="250dp"
+        android:layout_height="50dp"
+        android:layout_marginTop="5dp"
+        android:drawable="@drawable/auto_complete_style"
+        android:layout_centerHorizontal="true"
+        android:completionThreshold="1"
+        android:hint="请输入相关信息"
+        android:dropDownHeight="200dp"
+        android:dropDownWidth="240dp"/>
 
 </RelativeLayout>

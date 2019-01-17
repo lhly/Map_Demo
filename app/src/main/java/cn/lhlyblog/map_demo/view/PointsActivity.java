@@ -33,7 +33,7 @@ public class PointsActivity extends AppCompatActivity {
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-                constants.setAIDLATLNG(constants.LOC_POINTS.get(i));
+                constants.setAIDLATLNG(Constants.LOC_POINTS.get(i));
                 Intent intent = new Intent(PointsActivity.this, WalkRouteActivity.class);
                 startActivity(intent);
                 finish();
@@ -42,8 +42,8 @@ public class PointsActivity extends AppCompatActivity {
     }
 
     private void initList() {
-        for (int i = 0; i < constants.POINTS.size(); i++) {
-            mList.add(constants.POINTS.get(i));
+        for (int i = 0; i < Constants.POINTS.size(); i++) {
+            mList.add(Constants.POINTS.get(i));
         }
     }
 }

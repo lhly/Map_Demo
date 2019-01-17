@@ -9,6 +9,9 @@ import android.os.Bundle;
 import android.support.v7.app.AlertDialog;
 import android.util.Log;
 import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.TextView;
 
@@ -28,18 +31,19 @@ import com.amap.api.maps.model.MarkerOptions;
 import cn.lhlyblog.map_demo.util.Constants;
 import cn.lhlyblog.map_demo.util.SensorEventHelper;
 import cn.lhlyblog.map_demo.view.PointsActivity;
+import cn.lhlyblog.map_demo.view.WalkRouteActivity;
 
 public class MainActivity extends CheckPermissions
         implements LocationSource, AMapLocationListener {
-
+    private static final String TAG = "-----MainActivity----";
     private WifiManager mWifiManager;
     private TextView mLocationErrText;
     private Button button;
-
+    private AutoCompleteTextView auto_edit;
     private AMap aMap;
     private SensorEventHelper sensorEventhelper;
     private Marker marker;
-
+    private Constants constants;
     private LocationSource.OnLocationChangedListener mListener;
     private AMapLocationClient mlocationClient;
     private AMapLocationClientOption mLocationOption;
@@ -57,7 +61,15 @@ public class MainActivity extends CheckPermissions
         mWifiManager = (WifiManager) this.getApplicationContext()
                 .getSystemService(Context.WIFI_SERVICE);
         button = (Button) findViewById(R.id.btn_list);
-
+        auto_edit = (AutoCompleteTextView) findViewById(R.id.auto_edit);
+        auto_edit.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                constants.setAIDLATLNG(Constants.LOC_POINTS.get(getPosition(((TextView)view.findViewById(android.R.id.text1)).getText().toString())));
+                Intent intent = new Intent(MainActivity.this, WalkRouteActivity.class);
+                startActivity(intent);
+            }
+        });
         init();
         button.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -68,14 +80,21 @@ public class MainActivity extends CheckPermissions
         });
     }
 
+    /**
+     * 初始化相关信息
+     */
     private void init() {
         setUpMapIfNeeded();
-        sensorEventhelper = new SensorEventHelper(this);
-        if (sensorEventhelper != null) {
+        //初始化传感器、注册监听
+        if (sensorEventhelper == null) {
+            sensorEventhelper = new SensorEventHelper(this);
             sensorEventhelper.registerSensorListener();
         }
     }
 
+    /**
+     *初始化信息(锁定范围、注册定位监听、设置定位模式)
+     */
     private void setUpMap() {
         aMap = ((SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map)).getMap();
@@ -87,14 +106,23 @@ public class MainActivity extends CheckPermissions
         aMap.setMyLocationEnabled(true);// 设置为true表示显示定位层并可触发定位，false表示隐藏定位层并不可触发定位，默认是false
         // 设置定位的类型为定位模式 ，可以由定位、跟随或地图根据面向方向旋转几种
         aMap.setMyLocationType(AMap.LOCATION_TYPE_LOCATE);
+        //初始化autoCompleteText
+        auto_edit.setAdapter(getInfo());     // 绑定adapter
     }
 
+    /**
+     * 初始一次aMap
+     */
     private void setUpMapIfNeeded() {
         if (aMap == null) {
             setUpMap();
         }
     }
 
+    /**
+     * 销毁定位点
+     * 销毁定位服务
+     */
     @Override
     protected void onDestroy() {
         super.onDestroy();
@@ -106,7 +134,10 @@ public class MainActivity extends CheckPermissions
         }
     }
 
-
+    /**
+     * 检查wifi是否启动
+     * 没启动则提示用户启动
+     */
     private void checkWifiSetting() {
         if (mWifiManager.isWifiEnabled()) {
             return;
@@ -133,16 +164,21 @@ public class MainActivity extends CheckPermissions
         builder.create().show();
     }
 
+    /**
+     *初始化aMap
+     * 方向传感器注册
+     */
     @Override
     protected void onResume() {
         super.onResume();
-        setUpMapIfNeeded();
-        if (sensorEventhelper != null) {
-            sensorEventhelper.registerSensorListener();
-        }
+        init();
+        activate(mListener);
     }
 
-
+    /**
+     * 销毁方向传感服务
+     * 销毁定位服务
+     */
     @Override
     protected void onPause() {
         super.onPause();
@@ -159,12 +195,12 @@ public class MainActivity extends CheckPermissions
      */
     @Override
     public void onLocationChanged(AMapLocation amapLocation) {
+        Log.d(TAG, "onLocationChanged: ");
         if (mListener != null && amapLocation != null) {
-            if (amapLocation != null
-                    && amapLocation.getErrorCode() == 0) {
+            if (amapLocation.getErrorCode() == 0) {
                 LatLng location = new LatLng(amapLocation.getLatitude(), amapLocation.getLongitude());
                 mLocationErrText.setVisibility(View.GONE);
-                Constants constants = new Constants();
+//                Constants constants = new Constants();
                 constants.setMYLATLNG(location);
                 // Log.e("showMyLoc", "onLocationChanged: " + constants.getMYLATLNG());;
                 /*mListener.onLocationChanged(amapLocation);// 显示系统小蓝点*/
@@ -196,6 +232,7 @@ public class MainActivity extends CheckPermissions
      */
     @Override
     public void activate(OnLocationChangedListener listener) {
+        Log.d(TAG, "activate: ");
         checkWifiSetting();
         mListener = listener;
         if (mlocationClient == null) {
@@ -220,14 +257,40 @@ public class MainActivity extends CheckPermissions
 
     /**
      * 停止定位
+     * 销毁定位服务
      */
     @Override
     public void deactivate() {
-        mListener = null;
+        Log.d(TAG, "deactivate: ");
         if (mlocationClient != null) {
             mlocationClient.stopLocation();
             mlocationClient.onDestroy();
         }
         mlocationClient = null;
+    }
+
+    /**
+     * 获取全部常量点位
+     * @return autoComplete适配器
+     */
+    private ArrayAdapter<String> getInfo(){
+        if(constants == null){
+            constants = new Constants();
+        }
+        return new ArrayAdapter<>(this,  android.R.layout.simple_dropdown_item_1line,Constants.POINTS);
+    }
+
+    /**
+     * 根据点位名称，获取下标
+     * @param name 名称
+     * @return 下标
+     */
+    private int getPosition(String name){
+        for(int i=0;i<Constants.POINTS.size();i++){
+            if(name.equals(Constants.POINTS.get(i))){
+                return i;
+            }
+        }
+        return Constants.POINTS.size();
     }
 }
