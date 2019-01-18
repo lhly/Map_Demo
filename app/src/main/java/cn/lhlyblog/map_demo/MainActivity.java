@@ -6,8 +6,10 @@ import android.content.Intent;
 import android.graphics.BitmapFactory;
 import android.net.wifi.WifiManager;
 import android.os.Bundle;
+import android.provider.Settings;
 import android.support.v7.app.AlertDialog;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -30,11 +32,13 @@ import com.amap.api.maps.model.MarkerOptions;
 
 import cn.lhlyblog.map_demo.util.Constants;
 import cn.lhlyblog.map_demo.util.SensorEventHelper;
+import cn.lhlyblog.map_demo.util.ToastUtil;
 import cn.lhlyblog.map_demo.view.PointsActivity;
 import cn.lhlyblog.map_demo.view.WalkRouteActivity;
 
 public class MainActivity extends CheckPermissions
         implements LocationSource, AMapLocationListener {
+    private long currentTime;
     private static final String TAG = "-----MainActivity----";
     private WifiManager mWifiManager;
     private TextView mLocationErrText;
@@ -65,7 +69,7 @@ public class MainActivity extends CheckPermissions
         auto_edit.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                constants.setAIDLATLNG(Constants.LOC_POINTS.get(getPosition(((TextView)view.findViewById(android.R.id.text1)).getText().toString())));
+                constants.setAIDLATLNG(Constants.LOC_POINTS.get(getPosition(((TextView) view.findViewById(android.R.id.text1)).getText().toString())));
                 Intent intent = new Intent(MainActivity.this, WalkRouteActivity.class);
                 startActivity(intent);
             }
@@ -93,7 +97,7 @@ public class MainActivity extends CheckPermissions
     }
 
     /**
-     *初始化信息(锁定范围、注册定位监听、设置定位模式)
+     * 初始化信息(锁定范围、注册定位监听、设置定位模式)
      */
     private void setUpMap() {
         aMap = ((SupportMapFragment) getSupportFragmentManager()
@@ -126,6 +130,7 @@ public class MainActivity extends CheckPermissions
     @Override
     protected void onDestroy() {
         super.onDestroy();
+
         if (marker != null) {
             marker.destroy();
         }
@@ -165,7 +170,7 @@ public class MainActivity extends CheckPermissions
     }
 
     /**
-     *初始化aMap
+     * 初始化aMap
      * 方向传感器注册
      */
     @Override
@@ -215,8 +220,13 @@ public class MainActivity extends CheckPermissions
         }
     }
 
+    /**
+     * 添加定位标记点(包括移动)
+     * @param latLng
+     */
     private void addMarker(LatLng latLng) {
         if (marker != null) {
+            marker.setPosition(latLng);
             return;
         }
         MarkerOptions options = new MarkerOptions();
@@ -271,26 +281,46 @@ public class MainActivity extends CheckPermissions
 
     /**
      * 获取全部常量点位
+     *
      * @return autoComplete适配器
      */
-    private ArrayAdapter<String> getInfo(){
-        if(constants == null){
+    private ArrayAdapter<String> getInfo() {
+        if (constants == null) {
             constants = new Constants();
         }
-        return new ArrayAdapter<>(this,  android.R.layout.simple_dropdown_item_1line,Constants.POINTS);
+        return new ArrayAdapter<>(this, android.R.layout.simple_dropdown_item_1line, Constants.POINTS);
     }
 
     /**
      * 根据点位名称，获取下标
+     *
      * @param name 名称
      * @return 下标
      */
-    private int getPosition(String name){
-        for(int i=0;i<Constants.POINTS.size();i++){
-            if(name.equals(Constants.POINTS.get(i))){
+    private int getPosition(String name) {
+        for (int i = 0; i < Constants.POINTS.size(); i++) {
+            if (name.equals(Constants.POINTS.get(i))) {
                 return i;
             }
         }
         return Constants.POINTS.size();
+    }
+
+    /**
+     * 两秒内多次点击back退出程序
+     * @param keyCode
+     * @param event
+     * @return
+     */
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        if (keyCode == KeyEvent.KEYCODE_BACK) {
+            if (System.currentTimeMillis() - currentTime > 2000) {
+                currentTime = System.currentTimeMillis();
+                ToastUtil.show(this,"再按一次后退键退出程序");
+                return true;
+            }
+        }
+        return super.onKeyDown(keyCode, event);
     }
 }
