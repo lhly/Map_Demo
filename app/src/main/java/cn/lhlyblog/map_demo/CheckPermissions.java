@@ -38,16 +38,16 @@ public class CheckPermissions extends AppCompatActivity
     @Override
     protected void onResume() {
         super.onResume();
-        if(isNeedCheck){
+        if (isNeedCheck) {
             checkPermissions(needPermissions);
         }
     }
 
     /**
+     * 检查权限
      *
      * @param permissions
      * @since 2.5.0
-     *
      */
     private void checkPermissions(String... permissions) {
         List<String> needRequestPermissionList = findDeniedPermissions(permissions);
@@ -66,7 +66,6 @@ public class CheckPermissions extends AppCompatActivity
      * @param permissions
      * @return
      * @since 2.5.0
-     *
      */
     private List<String> findDeniedPermissions(String[] permissions) {
         List<String> needRequestPermissonList = new ArrayList<String>();
@@ -83,10 +82,10 @@ public class CheckPermissions extends AppCompatActivity
 
     /**
      * 检测是否所有的权限都已经授权
+     *
      * @param grantResults
      * @return
      * @since 2.5.0
-     *
      */
     private boolean verifyPermissions(int[] grantResults) {
         for (int result : grantResults) {
@@ -112,7 +111,6 @@ public class CheckPermissions extends AppCompatActivity
      * 显示提示信息
      *
      * @since 2.5.0
-     *
      */
     private void showMissingPermissionDialog() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
@@ -142,10 +140,9 @@ public class CheckPermissions extends AppCompatActivity
     }
 
     /**
-     *  启动应用的设置
+     * 启动应用的设置
      *
      * @since 2.5.0
-     *
      */
     private void startAppSettings() {
         Intent intent = new Intent(
@@ -156,7 +153,7 @@ public class CheckPermissions extends AppCompatActivity
 
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
-        if(keyCode == KeyEvent.KEYCODE_BACK){
+        if (keyCode == KeyEvent.KEYCODE_BACK) {
             this.finish();
             return true;
         }

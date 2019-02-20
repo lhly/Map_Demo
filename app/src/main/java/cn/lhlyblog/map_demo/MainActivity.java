@@ -4,13 +4,16 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.BitmapFactory;
+import android.graphics.Color;
 import android.net.wifi.WifiManager;
 import android.os.Bundle;
-import android.provider.Settings;
+import android.os.SystemClock;
 import android.support.v7.app.AlertDialog;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
+import android.view.animation.Interpolator;
+import android.view.animation.LinearInterpolator;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
@@ -22,13 +25,20 @@ import com.amap.api.location.AMapLocationClient;
 import com.amap.api.location.AMapLocationClientOption;
 import com.amap.api.location.AMapLocationListener;
 import com.amap.api.maps.AMap;
+import com.amap.api.maps.CameraUpdateFactory;
 import com.amap.api.maps.LocationSource;
 import com.amap.api.maps.SupportMapFragment;
 import com.amap.api.maps.model.BitmapDescriptorFactory;
+import com.amap.api.maps.model.Circle;
+import com.amap.api.maps.model.CircleOptions;
 import com.amap.api.maps.model.LatLng;
 import com.amap.api.maps.model.LatLngBounds;
 import com.amap.api.maps.model.Marker;
 import com.amap.api.maps.model.MarkerOptions;
+
+import java.util.Objects;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import cn.lhlyblog.map_demo.util.Constants;
 import cn.lhlyblog.map_demo.util.SensorEventHelper;
@@ -49,9 +59,14 @@ public class MainActivity extends CheckPermissions
     private Marker marker;
     private Constants constants;
     private LocationSource.OnLocationChangedListener mListener;
-    private AMapLocationClient mlocationClient;
-    private AMapLocationClientOption mLocationOption;
-
+    private AMapLocationClient mLocationClient;
+    private Circle ac;
+    private Circle c;
+    private long start = 0;
+    //    private final Interpolator interpolator = new CycleInterpolator(1);
+    private final Interpolator interpolator1 = new LinearInterpolator();
+    private TimerTask mTimerTask = null;
+    private Timer mTimer = new Timer();
     LatLng southwestLatLng = new LatLng(34.62317, 112.597139);
     LatLng northeastLatLng = new LatLng(34.63627, 112.613232);
     LatLngBounds latLngBounds = new LatLngBounds.Builder()
@@ -61,11 +76,11 @@ public class MainActivity extends CheckPermissions
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        mLocationErrText = (TextView) findViewById(R.id.location_errInfo_text);
+        mLocationErrText = findViewById(R.id.location_errInfo_text);
         mWifiManager = (WifiManager) this.getApplicationContext()
                 .getSystemService(Context.WIFI_SERVICE);
-        button = (Button) findViewById(R.id.btn_list);
-        auto_edit = (AutoCompleteTextView) findViewById(R.id.auto_edit);
+        button = findViewById(R.id.btn_list);
+        auto_edit = findViewById(R.id.auto_edit);
         auto_edit.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
@@ -100,9 +115,9 @@ public class MainActivity extends CheckPermissions
      * 初始化信息(锁定范围、注册定位监听、设置定位模式)
      */
     private void setUpMap() {
-        aMap = ((SupportMapFragment) getSupportFragmentManager()
-                .findFragmentById(R.id.map)).getMap();
-        aMap.setMapStatusLimits(latLngBounds);
+        aMap = ((SupportMapFragment) Objects.requireNonNull(getSupportFragmentManager()
+                .findFragmentById(R.id.map))).getMap();
+//        aMap.setMapStatusLimits(latLngBounds);
         aMap.setLocationSource(this);// 设置定位监听
         aMap.getUiSettings().setMyLocationButtonEnabled(true);// 设置默认定位按钮是否显示
         aMap.getUiSettings().setRotateGesturesEnabled(false);
@@ -120,22 +135,6 @@ public class MainActivity extends CheckPermissions
     private void setUpMapIfNeeded() {
         if (aMap == null) {
             setUpMap();
-        }
-    }
-
-    /**
-     * 销毁定位点
-     * 销毁定位服务
-     */
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-
-        if (marker != null) {
-            marker.destroy();
-        }
-        if (mlocationClient != null) {
-            mlocationClient.onDestroy();
         }
     }
 
@@ -196,12 +195,88 @@ public class MainActivity extends CheckPermissions
     }
 
     /**
+     * 销毁定位点
+     * 销毁定位服务
+     * 销毁经度圈定时器
+     */
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+
+        if (marker != null) {
+            marker.destroy();
+        }
+        if (mLocationClient != null) {
+            mLocationClient.onDestroy();
+        }
+        if (mTimerTask != null) {
+            mTimerTask.cancel();
+            mTimerTask = null;
+        }
+        try {
+            mTimer.cancel();
+        } catch (Throwable e) {
+            e.printStackTrace();
+        }
+
+    }
+
+    /**
+     * 激活定位
+     */
+    @Override
+    public void activate(OnLocationChangedListener listener) {
+        Log.d(TAG, "activate: ");
+        checkWifiSetting();
+        mListener = listener;
+        if (mLocationClient == null) {
+            mLocationClient = new AMapLocationClient(this);
+            AMapLocationClientOption mLocationOption = new AMapLocationClientOption();
+            //设置定位监听
+            mLocationClient.setLocationListener(this);
+            //设置为高精度定位模式
+            mLocationOption.setLocationMode(AMapLocationClientOption.AMapLocationMode.Hight_Accuracy);
+            mLocationOption.setInterval(2000);
+            mLocationOption.setSensorEnable(true);
+//            设置为单次定位
+//            mLocationOption.setOnceLocation(true);
+            //设置定位参数
+            mLocationClient.setLocationOption(mLocationOption);
+            // 此方法为每隔固定时间会发起一次定位请求，为了减少电量消耗或网络流量消耗，
+            // 注意设置合适的定位时间的间隔（最小间隔支持为2000ms），并且在合适时间调用stopLocation()方法来取消定位请求
+            // 在定位结束后，在合适的生命周期调用onDestroy()方法
+            // 在单次定位情况下，定位无论成功与否，都无需调用stopLocation()方法移除请求，定位sdk内部会移除
+            mLocationClient.startLocation();
+        } else {
+            mLocationClient.startLocation();
+        }
+    }
+
+    /**
+     * 停止定位
+     * 销毁定位服务
+     */
+    @Override
+    public void deactivate() {
+        Log.d(TAG, "deactivate: ");
+        if (mLocationClient != null) {
+            mLocationClient.stopLocation();
+            mLocationClient.onDestroy();
+        }
+        mLocationClient = null;
+    }
+
+    /**
      * 定位成功后回调函数
      */
     @Override
     public void onLocationChanged(AMapLocation amapLocation) {
         Log.d(TAG, "onLocationChanged: ");
         if (mListener != null && amapLocation != null) {
+            if (mTimerTask != null) {
+                mTimerTask.cancel();
+                mTimerTask = null;
+            }
             if (amapLocation.getErrorCode() == 0) {
                 LatLng location = new LatLng(amapLocation.getLatitude(), amapLocation.getLongitude());
                 mLocationErrText.setVisibility(View.GONE);
@@ -209,7 +284,7 @@ public class MainActivity extends CheckPermissions
                 constants.setMYLATLNG(location);
                 // Log.e("showMyLoc", "onLocationChanged: " + constants.getMYLATLNG());;
                 /*mListener.onLocationChanged(amapLocation);// 显示系统小蓝点*/
-                addMarker(location);
+                addMarker(location, 50);
                 sensorEventhelper.setCurrentMarker(marker);
             } else {
                 String errText = "定位失败," + amapLocation.getErrorCode() + ": " + amapLocation.getErrorInfo();
@@ -221,62 +296,45 @@ public class MainActivity extends CheckPermissions
     }
 
     /**
-     * 添加定位标记点(包括移动)
-     * @param latLng
+     * 添加定位标记点(包括更新)
      */
-    private void addMarker(LatLng latLng) {
+    private void addMarker(LatLng latLng, float accuracy) {
+        Log.d(TAG, "addMarker: 精度值:" + accuracy);
         if (marker != null) {
             marker.setPosition(latLng);
-            return;
+            ac.setCenter(latLng);
+            ac.setRadius(accuracy);
+            c.setCenter(latLng);
+            c.setRadius(accuracy);
+        } else {
+            MarkerOptions options = new MarkerOptions();
+            options.icon(BitmapDescriptorFactory.fromBitmap(BitmapFactory.decodeResource(this.getResources(),
+                    R.mipmap.locked)));
+            options.anchor(0.5f, 0.5f);
+            options.position(latLng);
+            marker = aMap.addMarker(options);
+            aMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 19));
+            //设置精度圆信息
+            ac = aMap.addCircle(new CircleOptions().center(latLng)
+                    .fillColor(Color.argb(100, 255, 218, 185)).radius(accuracy)
+                    .strokeColor(Color.argb(255, 255, 228, 185)).strokeWidth(5));
+            c = aMap.addCircle(new CircleOptions().center(latLng)
+                    .fillColor(Color.argb(70, 255, 218, 185)).radius(accuracy)
+                    .strokeColor(Color.argb(255, 255, 228, 185)).strokeWidth(0));
+
         }
-        MarkerOptions options = new MarkerOptions();
-        options.icon(BitmapDescriptorFactory.fromBitmap(BitmapFactory.decodeResource(this.getResources(),
-                R.mipmap.locked)));
-        options.anchor(0.5f, 0.5f);
-        options.position(latLng);
-        marker = aMap.addMarker(options);
+        Scalecircle(c);
     }
 
     /**
-     * 激活定位
+     * 缩放定位圈(更新)
      */
-    @Override
-    public void activate(OnLocationChangedListener listener) {
-        Log.d(TAG, "activate: ");
-        checkWifiSetting();
-        mListener = listener;
-        if (mlocationClient == null) {
-            mlocationClient = new AMapLocationClient(this);
-            mLocationOption = new AMapLocationClientOption();
-            //设置定位监听
-            mlocationClient.setLocationListener(this);
-            //设置为高精度定位模式
-            mLocationOption.setLocationMode(AMapLocationClientOption.AMapLocationMode.Hight_Accuracy);
-            mLocationOption.setInterval(2000);
-            mLocationOption.setSensorEnable(true);
-            //设置定位参数
-            mlocationClient.setLocationOption(mLocationOption);
-            // 此方法为每隔固定时间会发起一次定位请求，为了减少电量消耗或网络流量消耗，
-            // 注意设置合适的定位时间的间隔（最小间隔支持为2000ms），并且在合适时间调用stopLocation()方法来取消定位请求
-            // 在定位结束后，在合适的生命周期调用onDestroy()方法
-            // 在单次定位情况下，定位无论成功与否，都无需调用stopLocation()方法移除请求，定位sdk内部会移除
-            mlocationClient.startLocation();
-
+    public void Scalecircle(final Circle circle) {
+        start = SystemClock.uptimeMillis();
+        if (mTimerTask == null) {
+            mTimerTask = new CircleTask(circle, 1000);
         }
-    }
-
-    /**
-     * 停止定位
-     * 销毁定位服务
-     */
-    @Override
-    public void deactivate() {
-        Log.d(TAG, "deactivate: ");
-        if (mlocationClient != null) {
-            mlocationClient.stopLocation();
-            mlocationClient.onDestroy();
-        }
-        mlocationClient = null;
+        mTimer.schedule(mTimerTask, 0, 30);
     }
 
     /**
@@ -308,19 +366,49 @@ public class MainActivity extends CheckPermissions
 
     /**
      * 两秒内多次点击back退出程序
-     * @param keyCode
-     * @param event
-     * @return
      */
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         if (keyCode == KeyEvent.KEYCODE_BACK) {
             if (System.currentTimeMillis() - currentTime > 2000) {
                 currentTime = System.currentTimeMillis();
-                ToastUtil.show(this,"再按一次后退键退出程序");
+                ToastUtil.show(this, "再按一次后退键退出程序");
                 return true;
             }
         }
         return super.onKeyDown(keyCode, event);
+    }
+
+    private class CircleTask extends TimerTask {
+        private double r;
+        private Circle circle;
+        private long duration = 1000;
+
+        CircleTask(Circle circle, long rate) {
+            this.circle = circle;
+            this.r = circle.getRadius();
+            if (rate > 0) {
+                this.duration = rate;
+            }
+        }
+
+        @Override
+        public void run() {
+            try {
+                long elapsed = SystemClock.uptimeMillis() - start;
+                float input = (float) elapsed / duration;
+//                外圈循环缩放
+//                float t = interpolator.getInterpolation((float)(input-0.25));//return (float)(Math.sin(2 * mCycles * Math.PI * input))
+//                double r1 = (t + 2) * r;
+//                外圈放大后消失
+                float t = interpolator1.getInterpolation(input);
+                double r1 = (t + 1) * r;
+                circle.setRadius(r1);
+                if (input > 2)
+                    start = SystemClock.uptimeMillis();
+            } catch (Throwable e) {
+                e.printStackTrace();
+            }
+        }
     }
 }

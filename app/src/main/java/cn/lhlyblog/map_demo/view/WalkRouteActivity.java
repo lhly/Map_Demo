@@ -3,20 +3,16 @@ package cn.lhlyblog.map_demo.view;
 import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Context;
-import android.content.Intent;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.amap.api.maps.AMap;
 import com.amap.api.maps.MapView;
-import com.amap.api.maps.model.BitmapDescriptorFactory;
 import com.amap.api.maps.model.LatLng;
 import com.amap.api.maps.model.LatLngBounds;
 import com.amap.api.maps.model.Marker;
-import com.amap.api.maps.model.MarkerOptions;
 import com.amap.api.maps.model.MyLocationStyle;
 import com.amap.api.services.core.AMapException;
 import com.amap.api.services.core.LatLonPoint;
@@ -65,7 +61,7 @@ public class    WalkRouteActivity extends Activity implements AMap.OnMapClickLis
         mEndPoint = new LatLonPoint(constants.getAIDLATLNG().latitude, constants.getAIDLATLNG().longitude);
 
         mContext = this.getApplicationContext();
-        mapView = (MapView) findViewById(R.id.route_map);
+        mapView = findViewById(R.id.route_map);
         mapView.onCreate(bundle);// 此方法必须重写
         init();
     }
