@@ -46,6 +46,9 @@ import cn.lhlyblog.map_demo.util.ToastUtil;
 import cn.lhlyblog.map_demo.view.PointsActivity;
 import cn.lhlyblog.map_demo.view.WalkRouteActivity;
 
+/**
+ * 洛师地图
+ */
 public class MainActivity extends CheckPermissions
         implements LocationSource, AMapLocationListener {
     private long currentTime;
