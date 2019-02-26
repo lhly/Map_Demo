@@ -2,10 +2,17 @@ package cn.lhlyblog.map_demo.overlay;
 
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Color;
+import android.util.Log;
 
+import com.amap.api.location.AMapLocation;
+import com.amap.api.location.AMapLocationClient;
+import com.amap.api.location.AMapLocationClientOption;
+import com.amap.api.location.AMapLocationListener;
 import com.amap.api.maps.AMap;
 import com.amap.api.maps.CameraUpdateFactory;
+import com.amap.api.maps.LocationSource;
 import com.amap.api.maps.model.BitmapDescriptor;
 import com.amap.api.maps.model.BitmapDescriptorFactory;
 import com.amap.api.maps.model.LatLng;
@@ -16,13 +23,14 @@ import com.amap.api.maps.model.Polyline;
 import com.amap.api.maps.model.PolylineOptions;
 
 import cn.lhlyblog.map_demo.R;
+import cn.lhlyblog.map_demo.util.Constants;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class RouteOverlay {
-	protected List<Marker> stationMarkers = new ArrayList<Marker>();
-	protected List<Polyline> allPolyLines = new ArrayList<Polyline>();
+	protected List<Marker> stationMarkers = new ArrayList<>();
+	protected List<Polyline> allPolyLines = new ArrayList<>();
 	protected Marker startMarker;
 	protected Marker endMarker;
 	protected LatLng startPoint;
@@ -169,7 +177,6 @@ public class RouteOverlay {
 			e.printStackTrace();
 		}
 	}
-	
 	protected void addStationMarker(MarkerOptions options) {
 		if(options == null) {
 			return;
@@ -178,7 +185,6 @@ public class RouteOverlay {
 		if(marker != null) {
 			stationMarkers.add(marker);
 		}
-		
 	}
 
 	protected void addPolyLine(PolylineOptions options) {
@@ -190,7 +196,6 @@ public class RouteOverlay {
 			allPolyLines.add(polyline);
 		}
 	}
-	
 	protected float getRouteWidth() {
 		return 18f;
 	}

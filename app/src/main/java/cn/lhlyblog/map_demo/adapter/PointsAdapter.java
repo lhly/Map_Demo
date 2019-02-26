@@ -41,7 +41,7 @@ public class PointsAdapter extends BaseAdapter {
 
     @Override
     public View getView(int i, View view, ViewGroup viewGroup) {
-        ViewHolder viewHolder = null;
+        ViewHolder viewHolder;
         if (view == null) {
             viewHolder = new ViewHolder();
             view = layoutInflater.inflate(R.layout.points_item, null);
@@ -56,8 +56,9 @@ public class PointsAdapter extends BaseAdapter {
         return view;
     }
 
-    public class ViewHolder {
-        public ImageView img;
-        public TextView title;
-    }
+}
+
+class ViewHolder {
+    ImageView img;
+    TextView title;
 }
